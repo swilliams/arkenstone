@@ -60,6 +60,7 @@ module Arkenstone
         self.class.check_for_url
         self.timestamp if self.respond_to?(:timestampable)
         response             = self.id ? put_document_data : post_document_data
+        return false if response.code == '500'
         self.attributes      = JSON.parse(response.body)
         return self
       end

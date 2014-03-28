@@ -106,6 +106,19 @@ class ArkenstoneTest < Test::Unit::TestCase
     assert(user.bearded == true)
   end
 
+  def test_save_returns_false_with_server_error
+    eval %(
+      class SaveFail
+        include Arkenstone::Document
+        url 'http://example.com/derps'
+        attributes :name
+      end
+    )
+    model = SaveFail.new
+    stub_request(:post, SaveFail.arkenstone_url + '/').to_return(status: 500, body: {msg: 'oh noes'}.to_json)
+    assert_equal false, model.save
+  end
+
   def test_save_throws_an_error_for_no_url
     eval %(
       class NoUrlModel
@@ -249,7 +262,9 @@ class ArkenstoneTest < Test::Unit::TestCase
       end
     )
     stub_request(:post, Rock.arkenstone_url + '/').to_return(status: 500, body: { error: 'derp' }.to_json)
-    rock = Rock.create(name: 'err')
+    rock = Rock.new
+    rock.name = 'err'
+    rock.save
     assert_equal(false, rock.arkenstone_server_errors.nil?)
   end
 
